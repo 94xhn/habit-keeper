@@ -27,6 +27,12 @@ minus their most-complained-about pain points**.
 | "Privacy / permissions" `106` | **Zero permissions — not even INTERNET** |
 | "Hard to use" `56` | Simple list, habit grouping, drag-to-reorder (roadmap) |
 
+## Screenshots / 截图
+
+| Home · streaks | Add / edit habit |
+|---|---|
+| <img src="docs/screenshots/01-home.png" width="240"> | <img src="docs/screenshots/02-add-habit.png" width="240"> |
+
 ## Business model / 商业模式
 
 **Free & open-source, local-first — not SaaS.** No backend, no servers, no logins, no ads,
@@ -66,11 +72,12 @@ Or just open the project in Android Studio and Run.
 
 ## Status / 进度
 
-v0.1 skeleton: flexible-schedule engine + streak math + Room persistence + Compose home
-screen, with unit tests green. Reminders, widget, statistics, and backup are on the roadmap.
+v0.2: full habit CRUD (add / edit / delete), 4 flexible frequencies, daily check-off with
+frequency-aware streaks, daily reminder notifications, local-only storage. 24 unit tests green,
+CI passing. Statistics, backup, grouping, and a home-screen widget are on the roadmap.
 
-v0.1 骨架:灵活周期引擎 + streak 计算 + Room 持久化 + Compose 首页,单测全绿。
-提醒 / 桌面 widget / 统计 / 备份在路线图上。
+v0.2:完整习惯增删改 + 4 种灵活频率 + 频率感知 streak 打卡 + 每日提醒通知 + 纯本地存储。
+24 单测绿、CI 通过。统计 / 备份 / 分组 / 桌面 widget 在路线图上。
 
 ## License
 
