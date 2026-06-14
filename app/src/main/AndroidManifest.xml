@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Deliberately NO permissions — not even INTERNET.
+         Local-first is verifiable, not just a marketing promise. This is the direct
+         answer to the "privacy / permissions" complaints competitors collect
+         (weighted 106 in the review mining).
+         allowBackup=true: Android auto-backup is the first line of defense against
+         the most painful habit-tracker complaint — "switched phones, lost a whole
+         year of data" (Loop Habit Tracker, real review). -->
+    <application
+        android:name=".HabitKeeperApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.HabitKeeper">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

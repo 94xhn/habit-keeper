@@ -1,0 +1,4 @@
+<resources>
+    <!-- Platform theme only — Compose owns all real theming (lesson A23: no missing-resource AAPT errors). -->
+    <style name="Theme.HabitKeeper" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

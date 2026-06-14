@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">HabitKeeper</string>
+    <string name="add_habit">Add habit</string>
+    <string name="today">Today</string>
+    <string name="done">Done</string>
+    <string name="skip">Skip</string>
+    <string name="empty_habits">No habits yet.\nTap + to add your first one.</string>
+    <string name="save">Save</string>
+    <string name="back">Back</string>
+</resources>
