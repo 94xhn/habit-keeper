@@ -13,13 +13,32 @@ class AddHabitViewModel(
     private val scheduler: HabitReminderScheduler,
 ) : ViewModel() {
 
-    /** Persist the habit, schedule its reminder if set, then notify caller to navigate back. */
+    /** Load an existing habit for editing (null when adding a new one). */
+    suspend fun load(id: Long): Habit? = repo.getById(id)
+
+    /** Insert a new habit, schedule its reminder if set, then navigate back. */
     fun add(habit: Habit, onDone: () -> Unit) {
         viewModelScope.launch {
             val id = repo.add(habit)
-            if (habit.reminderMinuteOfDay != null) {
-                scheduler.schedule(habit.copy(id = id))
-            }
+            if (habit.reminderMinuteOfDay != null) scheduler.schedule(habit.copy(id = id))
+            onDone()
+        }
+    }
+
+    /** Update an existing habit and re-sync its reminder (reschedule or cancel). */
+    fun update(habit: Habit, onDone: () -> Unit) {
+        viewModelScope.launch {
+            repo.update(habit)
+            if (habit.reminderMinuteOfDay != null) scheduler.schedule(habit) else scheduler.cancel(habit.id)
+            onDone()
+        }
+    }
+
+    /** Delete a habit: cancel its reminder, drop the row and its logs, then navigate back. */
+    fun delete(habitId: Long, onDone: () -> Unit) {
+        viewModelScope.launch {
+            scheduler.cancel(habitId)
+            repo.delete(habitId)
             onDone()
         }
     }

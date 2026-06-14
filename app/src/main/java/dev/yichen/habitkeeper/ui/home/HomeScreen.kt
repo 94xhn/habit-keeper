@@ -1,5 +1,6 @@
 package dev.yichen.habitkeeper.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.yichen.habitkeeper.data.HabitRepository
 
 @Composable
-fun HomeScreen(repo: HabitRepository, onAddClick: () -> Unit) {
+fun HomeScreen(
+    repo: HabitRepository,
+    onAddClick: () -> Unit,
+    onEditClick: (Long) -> Unit,
+) {
     val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(repo))
     val rows by vm.rows.collectAsState()
 
@@ -46,7 +51,11 @@ fun HomeScreen(repo: HabitRepository, onAddClick: () -> Unit) {
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(rows, key = { it.habit.id }) { row ->
-                        HabitItem(row, onToggle = { vm.toggleToday(row.habit.id, it) })
+                        HabitItem(
+                            row = row,
+                            onToggle = { vm.toggleToday(row.habit.id, it) },
+                            onClick = { onEditClick(row.habit.id) },
+                        )
                     }
                 }
             }
@@ -59,9 +68,10 @@ fun HomeScreen(repo: HabitRepository, onAddClick: () -> Unit) {
 }
 
 @Composable
-private fun HabitItem(row: HabitRow, onToggle: (Boolean) -> Unit) {
+private fun HabitItem(row: HabitRow, onToggle: (Boolean) -> Unit, onClick: () -> Unit) {
+    // Tap the checkbox to toggle today; tap the rest of the row to edit.
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = row.doneToday, onCheckedChange = onToggle)

@@ -16,14 +16,17 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY sortOrder ASC, id ASC")
     suspend fun getAll(): List<HabitEntity>
 
+    @Query("SELECT * FROM habits WHERE id = :id")
+    suspend fun getById(id: Long): HabitEntity?
+
     @Insert
     suspend fun insert(habit: HabitEntity): Long
 
     @Update
     suspend fun update(habit: HabitEntity)
 
-    @Delete
-    suspend fun delete(habit: HabitEntity)
+    @Query("DELETE FROM habits WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
 
 @Dao
@@ -40,4 +43,7 @@ interface HabitLogDao {
 
     @Query("DELETE FROM habit_logs WHERE habitId = :habitId AND epochDay = :epochDay")
     suspend fun clear(habitId: Long, epochDay: Long)
+
+    @Query("DELETE FROM habit_logs WHERE habitId = :habitId")
+    suspend fun deleteForHabit(habitId: Long)
 }

@@ -26,6 +26,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.yichen.habitkeeper.data.HabitRepository
 import dev.yichen.habitkeeper.domain.FrequencyForm
 import dev.yichen.habitkeeper.domain.ReminderTime
+import dev.yichen.habitkeeper.domain.model.Frequency
 import dev.yichen.habitkeeper.domain.model.Habit
 import dev.yichen.habitkeeper.notify.HabitReminderScheduler
 import java.time.LocalDate
@@ -51,11 +53,13 @@ private val FREQ_LABELS = listOf("Every day", "Specific weekdays", "N times per 
 fun AddHabitScreen(
     repo: HabitRepository,
     scheduler: HabitReminderScheduler,
+    editHabitId: Long?,
     onDone: () -> Unit,
     onCancel: () -> Unit,
 ) {
     val vm: AddHabitViewModel = viewModel(factory = AddHabitViewModel.factory(repo, scheduler))
     val context = LocalContext.current
+    val isEdit = editHabitId != null
 
     var name by rememberSaveable { mutableStateOf("") }
     var emoji by rememberSaveable { mutableStateOf("") }
@@ -65,6 +69,36 @@ fun AddHabitScreen(
     var everyNDays by rememberSaveable { mutableStateOf("2") }
     var reminderEnabled by rememberSaveable { mutableStateOf(false) }
     var reminderMinute by rememberSaveable { mutableStateOf(8 * 60) }
+
+    // Original immutable fields preserved across an edit (kept Saveable as scalars).
+    var loaded by rememberSaveable { mutableStateOf(false) }
+    var origStartDay by rememberSaveable { mutableStateOf(0L) }
+    var origSortOrder by rememberSaveable { mutableStateOf(0) }
+    var origGroupId by rememberSaveable { mutableStateOf(-1L) } // -1 = null
+    var origArchived by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(editHabitId) {
+        if (editHabitId != null && !loaded) {
+            val h = vm.load(editHabitId)
+            if (h != null) {
+                name = h.name
+                emoji = h.emoji
+                when (val f = h.frequency) {
+                    Frequency.Daily -> freqType = 0
+                    is Frequency.Weekly -> { freqType = 1; weekdays = f.days }
+                    is Frequency.TimesPerWeek -> { freqType = 2; timesPerWeek = f.times.toString() }
+                    is Frequency.EveryNDays -> { freqType = 3; everyNDays = f.n.toString() }
+                }
+                reminderEnabled = h.reminderMinuteOfDay != null
+                reminderMinute = h.reminderMinuteOfDay ?: (8 * 60)
+                origStartDay = h.startEpochDay
+                origSortOrder = h.sortOrder
+                origGroupId = h.groupId ?: -1L
+                origArchived = h.archived
+            }
+            loaded = true
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -77,7 +111,7 @@ fun AddHabitScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onCancel) { Text("Cancel") }
                 Spacer(Modifier.width(8.dp))
-                Text("New Habit", style = MaterialTheme.typography.headlineSmall)
+                Text(if (isEdit) "Edit Habit" else "New Habit", style = MaterialTheme.typography.headlineSmall)
             }
             Spacer(Modifier.height(16.dp))
 
@@ -184,19 +218,50 @@ fun AddHabitScreen(
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    val habit = Habit(
-                        name = name.trim(),
-                        emoji = emoji.trim(),
-                        frequency = FrequencyForm.build(freqType, weekdays, timesPerWeek, everyNDays),
-                        startEpochDay = LocalDate.now().toEpochDay(),
-                        reminderMinuteOfDay = if (reminderEnabled) reminderMinute else null,
-                    )
-                    vm.add(habit, onDone)
+                    val freq = FrequencyForm.build(freqType, weekdays, timesPerWeek, everyNDays)
+                    val rem = if (reminderEnabled) reminderMinute else null
+                    if (editHabitId == null) {
+                        vm.add(
+                            Habit(
+                                name = name.trim(),
+                                emoji = emoji.trim(),
+                                frequency = freq,
+                                startEpochDay = LocalDate.now().toEpochDay(),
+                                reminderMinuteOfDay = rem,
+                            ),
+                            onDone,
+                        )
+                    } else {
+                        vm.update(
+                            Habit(
+                                id = editHabitId,
+                                name = name.trim(),
+                                emoji = emoji.trim(),
+                                frequency = freq,
+                                startEpochDay = origStartDay,
+                                groupId = if (origGroupId < 0) null else origGroupId,
+                                sortOrder = origSortOrder,
+                                archived = origArchived,
+                                reminderMinuteOfDay = rem,
+                            ),
+                            onDone,
+                        )
+                    }
                 },
                 enabled = name.isNotBlank() && (freqType != 1 || weekdays.isNotEmpty()),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Save")
+            }
+
+            if (editHabitId != null) {
+                Spacer(Modifier.height(8.dp))
+                TextButton(
+                    onClick = { vm.delete(editHabitId, onDone) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Delete habit", color = MaterialTheme.colorScheme.error)
+                }
             }
         }
     }

@@ -30,6 +30,14 @@ class HabitRepository(db: HabitDatabase) {
 
     suspend fun doneDays(habitId: Long): Set<Long> = logDao.doneDays(habitId).toSet()
 
+    suspend fun getById(id: Long): Habit? = habitDao.getById(id)?.toDomain()
+
+    /** Delete a habit together with all its completion logs. */
+    suspend fun delete(habitId: Long) {
+        logDao.deleteForHabit(habitId)
+        habitDao.deleteById(habitId)
+    }
+
     // --- mappers ---
 
     private fun HabitEntity.toDomain() = Habit(
