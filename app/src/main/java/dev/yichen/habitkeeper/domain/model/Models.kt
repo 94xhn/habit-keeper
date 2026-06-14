@@ -32,6 +32,8 @@ data class Habit(
     val groupId: Long? = null,
     val sortOrder: Int = 0,
     val archived: Boolean = false,
+    /** Daily reminder time as minute-of-day (0..1439), or null for no reminder. */
+    val reminderMinuteOfDay: Int? = null,
 )
 
 /** A completion mark for a habit on a given day (epochDay = days since 1970-01-01). */

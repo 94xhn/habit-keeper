@@ -22,6 +22,7 @@ data class HabitEntity(
     val groupId: Long?,
     val sortOrder: Int,
     val archived: Boolean,
+    val reminderMinuteOfDay: Int?,
 )
 
 @Entity(

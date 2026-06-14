@@ -41,6 +41,7 @@ class HabitRepository(db: HabitDatabase) {
         groupId = groupId,
         sortOrder = sortOrder,
         archived = archived,
+        reminderMinuteOfDay = reminderMinuteOfDay,
     )
 
     private fun Habit.toEntity(): HabitEntity {
@@ -55,6 +56,7 @@ class HabitRepository(db: HabitDatabase) {
             groupId = groupId,
             sortOrder = sortOrder,
             archived = archived,
+            reminderMinuteOfDay = reminderMinuteOfDay,
         )
     }
 

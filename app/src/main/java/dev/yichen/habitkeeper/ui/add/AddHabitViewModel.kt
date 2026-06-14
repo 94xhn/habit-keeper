@@ -5,22 +5,31 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.yichen.habitkeeper.data.HabitRepository
 import dev.yichen.habitkeeper.domain.model.Habit
+import dev.yichen.habitkeeper.notify.HabitReminderScheduler
 import kotlinx.coroutines.launch
 
-class AddHabitViewModel(private val repo: HabitRepository) : ViewModel() {
+class AddHabitViewModel(
+    private val repo: HabitRepository,
+    private val scheduler: HabitReminderScheduler,
+) : ViewModel() {
 
-    /** Persist the habit, then notify the caller so it can navigate back. */
+    /** Persist the habit, schedule its reminder if set, then notify caller to navigate back. */
     fun add(habit: Habit, onDone: () -> Unit) {
         viewModelScope.launch {
-            repo.add(habit)
+            val id = repo.add(habit)
+            if (habit.reminderMinuteOfDay != null) {
+                scheduler.schedule(habit.copy(id = id))
+            }
             onDone()
         }
     }
 
     companion object {
-        fun factory(repo: HabitRepository) = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = AddHabitViewModel(repo) as T
-        }
+        fun factory(repo: HabitRepository, scheduler: HabitReminderScheduler) =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    AddHabitViewModel(repo, scheduler) as T
+            }
     }
 }

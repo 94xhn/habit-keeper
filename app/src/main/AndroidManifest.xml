@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Deliberately NO permissions — not even INTERNET.
-         Local-first is verifiable, not just a marketing promise. This is the direct
-         answer to the "privacy / permissions" complaints competitors collect
-         (weighted 106 in the review mining).
-         allowBackup=true: Android auto-backup is the first line of defense against
-         the most painful habit-tracker complaint — "switched phones, lost a whole
-         year of data" (Loop Habit Tracker, real review). -->
+    <!-- The ONLY permission: post local reminder notifications (Android 13+ asks at runtime).
+         Still NO INTERNET / network / storage permission — habit data physically cannot leave
+         the device, so the privacy promise holds. This is the answer to the "privacy /
+         permissions" complaints competitors collect (weighted 106 in the review mining). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- allowBackup=true: Android auto-backup is the first line of defense against the most
+         painful habit-tracker complaint — "switched phones, lost a whole year of data". -->
     <application
         android:name=".HabitKeeperApp"
         android:allowBackup="true"
@@ -24,6 +25,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- exported=false: only our own AlarmManager can trigger reminders, never other apps. -->
+        <receiver
+            android:name=".notify.ReminderReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

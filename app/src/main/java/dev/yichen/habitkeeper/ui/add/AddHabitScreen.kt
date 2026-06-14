@@ -1,6 +1,8 @@
 package dev.yichen.habitkeeper.ui.add
 
+import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,9 +18,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,12 +33,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.yichen.habitkeeper.data.HabitRepository
 import dev.yichen.habitkeeper.domain.FrequencyForm
+import dev.yichen.habitkeeper.domain.ReminderTime
 import dev.yichen.habitkeeper.domain.model.Habit
+import dev.yichen.habitkeeper.notify.HabitReminderScheduler
 import java.time.LocalDate
 
 private val WEEKDAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
@@ -43,10 +50,12 @@ private val FREQ_LABELS = listOf("Every day", "Specific weekdays", "N times per 
 @Composable
 fun AddHabitScreen(
     repo: HabitRepository,
+    scheduler: HabitReminderScheduler,
     onDone: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val vm: AddHabitViewModel = viewModel(factory = AddHabitViewModel.factory(repo))
+    val vm: AddHabitViewModel = viewModel(factory = AddHabitViewModel.factory(repo, scheduler))
+    val context = LocalContext.current
 
     var name by rememberSaveable { mutableStateOf("") }
     var emoji by rememberSaveable { mutableStateOf("") }
@@ -54,6 +63,8 @@ fun AddHabitScreen(
     var weekdays by remember { mutableStateOf(emptySet<Int>()) }
     var timesPerWeek by rememberSaveable { mutableStateOf("3") }
     var everyNDays by rememberSaveable { mutableStateOf("2") }
+    var reminderEnabled by rememberSaveable { mutableStateOf(false) }
+    var reminderMinute by rememberSaveable { mutableStateOf(8 * 60) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -143,6 +154,33 @@ fun AddHabitScreen(
                 }
             }
 
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Daily reminder", style = MaterialTheme.typography.titleMedium)
+                Switch(checked = reminderEnabled, onCheckedChange = { reminderEnabled = it })
+            }
+            if (reminderEnabled) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        TimePickerDialog(
+                            context,
+                            { _, h, m -> reminderMinute = ReminderTime.of(h, m) },
+                            ReminderTime.hourOf(reminderMinute),
+                            ReminderTime.minuteOf(reminderMinute),
+                            true,
+                        ).show()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Remind at ${ReminderTime.format(reminderMinute)}")
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
@@ -151,6 +189,7 @@ fun AddHabitScreen(
                         emoji = emoji.trim(),
                         frequency = FrequencyForm.build(freqType, weekdays, timesPerWeek, everyNDays),
                         startEpochDay = LocalDate.now().toEpochDay(),
+                        reminderMinuteOfDay = if (reminderEnabled) reminderMinute else null,
                     )
                     vm.add(habit, onDone)
                 },
